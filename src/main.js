@@ -1,7 +1,45 @@
 import './style.css';
 const filters=[...document.querySelectorAll('.filter')];
-filters.forEach(btn=>btn.addEventListener('click',()=>{filters.forEach(x=>x.classList.remove('active'));btn.classList.add('active');const type=btn.dataset.filter;document.querySelectorAll('.asset').forEach(card=>{const tag=card.querySelector('.tag')?.textContent||'';card.hidden=type!=='Todos'&&!tag.toLowerCase().includes(type.toLowerCase().replace('máquinas e equipamentos','equipamentos'));});}));
-document.querySelector('#searchForm')?.addEventListener('submit',e=>{e.preventDefault();const category=document.querySelector('#category').value;const loc=document.querySelector('#location').value.trim();const price=document.querySelector('#price').value;document.querySelector('#oportunidades').scrollIntoView({behavior:'smooth'});if(category){const match=filters.find(x=>x.dataset.filter===category);if(match)match.click();}if(loc||price)alert('Busca demonstrativa. Os filtros de localização e faixa de valor serão ativados quando as oportunidades reais forem cadastradas.');});
-document.querySelector('#leadForm')?.addEventListener('submit',e=>{e.preventDefault();const form=e.currentTarget;const data=new FormData(form);const name=String(data.get('name')||'').trim();const phone=String(data.get('whatsapp')||'').trim();const city=String(data.get('city')||'').trim();const interest=String(data.get('interest')||'').trim();const budget=String(data.get('budget')||'').trim();const message=['Olá! Quero falar com a MRL4 Network.','Nome: '+name,'Meu WhatsApp: '+phone,'Cidade/Estado: '+(city||'Não informado'),'Interesse: '+interest,'Faixa de investimento: '+budget].join('\\n');const url='https://wa.me/5561992482750?text='+encodeURIComponent(message);window.open(url,'_blank','noopener,noreferrer');document.querySelector('#formMessage').textContent='O WhatsApp foi aberto com sua mensagem preenchida. Para concluir o contato, toque em Enviar na conversa.';});
-document.querySelector('.menu')?.addEventListener('click',()=>{const nav=document.querySelector('.top nav');nav.style.display=nav.style.display==='flex'?'none':'flex';nav.style.position='absolute';nav.style.top='72px';nav.style.left='0';nav.style.right='0';nav.style.padding='20px';nav.style.background='#101b27';nav.style.flexDirection='column';});
-if('serviceWorker' in navigator && location.protocol==='https:')navigator.serviceWorker.register('/sw.js').catch(()=>{});
+const cards=[...document.querySelectorAll('.asset')];
+function applyFilters(category='',location='',maxPrice=''){
+  cards.forEach(card=>{
+    const cat=card.dataset.category||'';
+    const price=Number(card.dataset.price||0);
+    const text=card.textContent.toLowerCase();
+    const okCat=!category||cat===category;
+    const okLoc=!location||text.includes(location.toLowerCase());
+    let okPrice=true;
+    if(maxPrice==='5000001') okPrice=price>5000000;
+    else if(maxPrice) okPrice=price<=Number(maxPrice);
+    card.hidden=!(okCat&&okLoc&&okPrice);
+  });
+}
+filters.forEach(btn=>btn.addEventListener('click',()=>{
+  filters.forEach(x=>x.classList.remove('active'));btn.classList.add('active');
+  applyFilters(btn.dataset.filter==='Todos'?'':btn.dataset.filter);
+}));
+document.querySelector('#searchForm')?.addEventListener('submit',e=>{
+  e.preventDefault();
+  const category=document.querySelector('#category').value;
+  const location=document.querySelector('#location').value.trim();
+  const price=document.querySelector('#price').value;
+  filters.forEach(x=>x.classList.toggle('active',x.dataset.filter===(category||'Todos')));
+  applyFilters(category,location,price);
+  document.querySelector('#oportunidades').scrollIntoView({behavior:'smooth'});
+});
+document.querySelector('#leadForm')?.addEventListener('submit',e=>{
+  e.preventDefault();const form=e.currentTarget;const data=new FormData(form);
+  const name=String(data.get('name')||'').trim();const phone=String(data.get('whatsapp')||'').trim();
+  const city=String(data.get('city')||'').trim();const interest=String(data.get('interest')||'').trim();
+  const budget=String(data.get('budget')||'').trim();
+  const message=['Olá! Quero falar com a MRL4 Network.','Nome: '+name,'Meu WhatsApp: '+phone,'Cidade/Estado: '+(city||'Não informado'),'Interesse: '+interest,'Faixa de investimento: '+budget].join('\n');
+  const url='https://wa.me/5561992482750?text='+encodeURIComponent(message);
+  window.open(url,'_blank','noopener,noreferrer');
+  document.querySelector('#formMessage').textContent='O WhatsApp foi aberto com sua mensagem preenchida. Para concluir o contato, toque em Enviar na conversa.';
+});
+document.querySelector('.menu')?.addEventListener('click',()=>{
+  const nav=document.querySelector('.top nav');nav.style.display=nav.style.display==='flex'?'none':'flex';
+  nav.style.position='absolute';nav.style.top='72px';nav.style.left='0';nav.style.right='0';nav.style.padding='20px';
+  nav.style.background='#101b27';nav.style.flexDirection='column';
+});
+if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('/sw.js').catch(()=>{});
